@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Зарница">
+<title>Зарница — оценка команды</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg-default: #0d1117;
+  --bg-subtle: #161b22;
+  --bg-inset: #010409;
+  --border-default: #30363d;
+  --border-muted: #21262d;
+  --fg-default: #e6edf3;
+  --fg-muted: #7d8590;
+  --fg-subtle: #6e7681;
+  --accent-fg: #2f81f7;
+  --accent-emphasis: #1f6feb;
+  --success-emphasis: #238636;
+  --danger-fg: #f85149;
+  --danger-emphasis: #da3633;
+  --attention-fg: #d29922;
+  --radius: 6px;
+  --btn-primary-bg: #238636;
+  --btn-primary-hover: #2ea043;
+  --btn-primary-border: rgba(240, 246, 252, 0.1);
+  --btn-default-bg: #21262d;
+  --btn-default-hover: #30363d;
+}
+html, body { margin: 0; padding: 0; min-height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  background: var(--bg-default);
+  color: var(--fg-default);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+#app {
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-default);
+}
+.gh-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-muted);
+}
+.gh-header-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  background: var(--btn-default-bg);
+  color: var(--fg-default);
+  border-radius: var(--radius);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.gh-header-btn:hover, .gh-header-btn:active { background: var(--btn-default-hover); }
+.gh-breadcrumb {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  overflow: hidden;
+}
+.gh-breadcrumb-owner { color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-breadcrumb-sep { color: var(--fg-subtle); }
+.gh-breadcrumb-repo { color: var(--fg-default); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-content { flex: 1; padding: 16px; }
+.gh-title { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+.gh-subtitle { color: var(--fg-muted); font-size: 14px; margin: 0 0 16px; }
+.gh-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 24px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gh-counter {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-muted);
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 2em;
+}
+.gh-card {
+  background: var(--bg-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.gh-list { list-style: none; margin: 0; padding: 0; }
+.gh-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-muted);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.gh-list-item:last-child { border-bottom: none; }
+.gh-list-item:hover, .gh-list-item:active { background: var(--bg-subtle); }
+.gh-list-item-main { flex: 1; min-width: 0; }
+.gh-list-item-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--accent-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gh-list-item-title.no-link { color: var(--fg-default); }
+.gh-list-item-meta { color: var(--fg-muted); font-size: 12px; margin-bottom: 8px; }
+.gh-label {
+  display: inline-block;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  border-radius: 2em;
+  border: 1px solid transparent;
+  color: #fff;
+  vertical-align: middle;
+}
+.gh-label.green { background: var(--success-emphasis); }
+.gh-label.blue { background: var(--accent-emphasis); }
+.gh-progress { display: flex; align-items: center; gap: 8px; }
+.gh-progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-subtle);
+  overflow: hidden;
+  border: 1px solid var(--border-muted);
+}
+.gh-progress-fill { height: 100%; background: var(--success-emphasis); transition: width 0.3s; }
+.gh-progress-text { font-size: 11px; color: var(--fg-muted); min-width: 40px; text-align: right; }
+.gh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-default);
+  background: var(--btn-default-bg);
+  color: var(--fg-default);
+  cursor: pointer;
+  font-family: inherit;
+  user-select: none;
+  transition: background 0.1s, border-color 0.1s;
+}
+.gh-btn:hover, .gh-btn:active { background: var(--btn-default-hover); border-color: #8b949e; }
+.gh-btn.primary { background: var(--btn-primary-bg); border-color: var(--btn-primary-border); color: #fff; }
+.gh-btn.primary:hover, .gh-btn.primary:active { background: var(--btn-primary-hover); }
+.gh-btn.danger { color: var(--danger-fg); }
+.gh-btn.danger:hover, .gh-btn.danger:active { background: var(--danger-emphasis); border-color: var(--danger-emphasis); color: #fff; }
+.gh-btn.full { width: 100%; }
+.gh-btn-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.gh-btn-row .gh-btn { flex: 1; }
+.gh-btn-square { width: 32px; height: 32px; padding: 0; }
+.gh-input, .gh-textarea {
+  width: 100%;
+  padding: 5px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 20px;
+  color: var(--fg-default);
+  background: var(--bg-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.1s, box-shadow 0.1s;
+  vertical-align: middle;
+}
+.gh-input:focus, .gh-textarea:focus { border-color: var(--accent-fg); box-shadow: 0 0 0 3px rgba(47, 129, 247, 0.3); }
+.gh-input::placeholder, .gh-textarea::placeholder { color: var(--fg-subtle); }
+.gh-textarea { min-height: 62px; padding: 10px 12px; resize: none; overflow: hidden; line-height: 1.5; }
+.gh-field { margin-bottom: 16px; }
+.gh-field-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--fg-default); }
+.gh-field-hint { color: var(--fg-muted); font-size: 12px; margin-top: 4px; }
+.gh-empty { padding: 40px 20px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+.gh-link { color: var(--accent-fg); text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
+.gh-link:hover { text-decoration: underline; }
+.gh-divider { height: 1px; background: var(--border-muted); margin: 20px 0; border: none; }
+.gh-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--fg-default);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
+  max-width: 90vw;
+}
+.gh-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.gh-meta-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg-muted); padding: 8px 0; margin-bottom: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+const STORAGE_KEY = 'zarnica_eval_v1';
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function defaultData() {
+  return {
+    teamName: 'Наша команда',
+    members: [{ id: 'team', name: 'Команда', role: 'Общая оценка', isTeam: true }],
+    categories: [
+      { id: uid(), name: 'Строевая подготовка' },
+      { id: uid(), name: 'Огневая подготовка' },
+      { id: uid(), name: 'Тактическая медицина' },
+      { id: uid(), name: 'РХБЗ' },
+      { id: uid(), name: 'Военизированная эстафета' },
+      { id: uid(), name: 'Тактическая подготовка' },
+      { id: uid(), name: 'Выживание' },
+      { id: uid(), name: 'Военно-политическая подготовка' },
+      { id: uid(), name: 'Инженерная подготовка' },
+      { id: uid(), name: 'Связь' },
+      { id: uid(), name: 'БПЛА' },
+      { id: uid(), name: 'Физическая подготовка' }
+    ],
+    evals: {},
+    version: 1
+  };
+}
+
+function normalizeData(d) {
+  if (!d || typeof d !== 'object') d = {};
+  const out = {
+    teamName: typeof d.teamName === 'string' && d.teamName ? d.teamName : 'Наша команда',
+    members: Array.isArray(d.members) ? d.members.filter(m => m && m.id && m.name).map(m => ({
+      id: String(m.id), name: String(m.name), role: String(m.role || ''), isTeam: !!m.isTeam
+    })) : [],
+    categories: Array.isArray(d.categories) ? d.categories.filter(c => c && c.id && c.name).map(c => ({
+      id: String(c.id), name: String(c.name)
+    })) : [],
+    evals: (d.evals && typeof d.evals === 'object') ? d.evals : {},
+    version: 1
+  };
+  if (!out.members.some(m => m.isTeam)) {
+    out.members.unshift({ id: 'team', name: 'Команда', role: 'Общая оценка', isTeam: true });
+  }
+  for (const m of out.members) if (m.isTeam) m.id = 'team';
+  const memberIds = new Set(out.members.map(m => m.id));
+  const catIds = new Set(out.categories.map(c => c.id));
+  const cleanEvals = {};
+  for (const mId of Object.keys(out.evals)) {
+    if (!memberIds.has(mId)) continue;
+    const src = out.evals[mId];
+    if (!src || typeof src !== 'object') continue;
+    const dst = {};
+    for (const cId of Object.keys(src)) {
+      if (catIds.has(cId) && typeof src[cId] === 'string' && src[cId].trim()) dst[cId] = src[cId];
+    }
+    if (Object.keys(dst).length) cleanEvals[mId] = dst;
+  }
+  out.evals = cleanEvals;
+  return out;
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultData();
+    return normalizeData(JSON.parse(raw));
+  } catch (e) { console.error(e); return defaultData(); }
+}
+
+const state = { data: loadData(), screen: 'home', currentMemberId: null };
+let saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
+    catch (e) { console.error(e); }
+  }, 150);
+}
+function saveNow() {
+  clearTimeout(saveTimer);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
+  catch (e) { console.error(e); }
+}
+
+function memberProgress(memberId) {
+  const ev = state.data.evals[memberId] || {};
+  const total = state.data.categories.length;
+  if (!total) return { filled: 0, total: 0, pct: 0 };
+  const filled = state.data.categories.filter(c => (ev[c.id] || '').trim()).length;
+  return { filled, total, pct: Math.round(filled / total * 100) };
+}
+
+function memberItemHtml(m) {
+  const p = memberProgress(m.id);
+  return `
+    <li class="gh-list-item" data-act="open-member" data-id="${esc(m.id)}">
+      <div class="gh-list-item-main">
+        <div class="gh-list-item-title ${m.isTeam ? 'no-link' : ''}">
+          ${esc(m.name)}
+          ${m.isTeam ? '<span class="gh-label green">команда</span>' : ''}
+        </div>
+        ${m.role ? `<div class="gh-list-item-meta">${esc(m.role)}</div>` : ''}
+        <div class="gh-progress">
+          <div class="gh-progress-bar"><div class="gh-progress-fill" style="width:${p.pct}%"></div></div>
+          <span class="gh-progress-text">${p.filled}/${p.total}</span>
+        </div>
+      </div>
+      <span style="color:var(--fg-muted);font-size:18px">›</span>
+    </li>`;
+}
+
+function renderHome() {
+  const d = state.data;
+  return `
+    <header class="gh-header">
+      <button class="gh-header-btn" data-act="open-settings" title="Настройки">☰</button>
+      <div class="gh-breadcrumb">
+        <span class="gh-breadcrumb-owner">${esc(d.teamName)}</span>
+        <span class="gh-breadcrumb-sep">/</span>
+        <span class="gh-breadcrumb-repo">Участники</span>
+      </div>
+      <button class="gh-header-btn" data-act="open-settings">⚙</button>
+    </header>
+    <main class="gh-content">
+      <div class="gh-field">
+        <input class="gh-input" id="search" type="search" placeholder="Поиск участника...">
+      </div>
+      <div class="gh-card">
+        <ul class="gh-list" id="memberList">
+          ${d.members.map(memberItemHtml).join('')}
+        </ul>
+      </div>
+      <button class="gh-btn primary full" data-act="add-member">+ Добавить участника</button>
+    </main>`;
+}
+
+function renderMember() {
+  const d = state.data;
+  const m = d.members.find(x => x.id === state.currentMemberId);
+  if (!m) { state.screen = 'home'; return renderHome(); }
+  const ev = d.evals[m.id] || {};
+  const p = memberProgress(m.id);
+  return `
+    <header class="gh-header">
+      <button class="gh-header-btn" data-act="back">←</button>
+      <div class="gh-breadcrumb">
+        <span class="gh-breadcrumb-owner">${esc(d.teamName)}</span>
+        <span class="gh-breadcrumb-sep">/</span>
+        <span class="gh-breadcrumb-repo">${esc(m.name)}</span>
+      </div>
+      <button class="gh-header-btn" data-act="edit-member" data-id="${esc(m.id)}">✎</button>
+    </header>
+    <main class="gh-content">
+      <div class="gh-meta-bar">
+        <span class="gh-label ${m.isTeam ? 'green' : 'blue'}">${m.isTeam ? 'команда' : 'участник'}</span>
+        ${m.role ? `<span>${esc(m.role)}</span><span>·</span>` : ''}
+        <span>Заполнено ${p.filled} из ${p.total}</span>
+      </div>
+      ${d.categories.length === 0
+        ? `<div class="gh-empty">Нет категорий. <button class="gh-link" data-act="open-settings">Добавить в настройках</button></div>`
+        : d.categories.map(c => `
+          <div class="gh-field">
+            <label class="gh-field-label" for="cat-${c.id}">${esc(c.name)}</label>
+            <textarea id="cat-${c.id}" class="gh-textarea" data-member="${esc(m.id)}" data-cat="${esc(c.id)}"
+              placeholder="${m.isTeam ? 'Сильные и слабые стороны команды в этой категории...' : 'Сильные стороны, слабые стороны, замечания...'}"
+              rows="2">${esc(ev[c.id] || '')}</textarea>
+          </div>`).join('')}
+    </main>`;
+}
+
+function renderSettings() {
+  const d = state.data;
+  return `
+    <header class="gh-header">
+      <button class="gh-header-btn" data-act="back">←</button>
+      <div class="gh-breadcrumb">
+        <span class="gh-breadcrumb-owner">${esc(d.teamName)}</span>
+        <span class="gh-breadcrumb-sep">/</span>
+        <span class="gh-breadcrumb-repo">Настройки</span>
+      </div>
+      <div style="width:32px"></div>
+    </header>
+    <main class="gh-content">
+      <h2 class="gh-section-title">Название команды</h2>
+      <div class="gh-card" style="padding:16px">
+        <input class="gh-input" id="teamNameInput" value="${esc(d.teamName)}" maxlength="60">
+      </div>
+
+      <h2 class="gh-section-title">Участники <span class="gh-counter">${d.members.filter(m=>!m.isTeam).length}</span></h2>
+      <div class="gh-card">
+        <ul class="gh-list">
+          ${d.members.map(m => `
+            <li class="gh-list-item" style="cursor:default">
+              <div class="gh-list-item-main">
+                <div class="gh-list-item-title ${m.isTeam ? 'no-link' : ''}">
+                  ${esc(m.name)} ${m.isTeam ? '<span class="gh-label green">команда</span>' : ''}
+                </div>
+                ${m.role ? `<div class="gh-list-item-meta">${esc(m.role)}</div>` : ''}
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="gh-btn gh-btn-square" data-act="edit-member" data-id="${esc(m.id)}" title="Изменить">✎</button>
+                ${m.isTeam ? '' : `<button class="gh-btn gh-btn-square danger" data-act="delete-member" data-id="${esc(m.id)}" title="Удалить">✕</button>`}
+              </div>
+            </li>`).join('')}
+        </ul>
+      </div>
+      <button class="gh-btn primary full" style="margin-top:8px" data-act="add-member">+ Добавить участника</button>
+
+      <h2 class="gh-section-title">Категории / нормативы <span class="gh-counter">${d.categories.length}</span></h2>
+      <div class="gh-card">
+        <ul class="gh-list">
+          ${d.categories.map(c => `
+            <li class="gh-list-item" style="cursor:default">
+              <div class="gh-list-item-main"><div class="gh-list-item-title no-link">${esc(c.name)}</div></div>
+              <div style="display:flex;gap:6px">
+                <button class="gh-btn gh-btn-square" data-act="edit-cat" data-id="${esc(c.id)}" title="Изменить">✎</button>
+                <button class="gh-btn gh-btn-square danger" data-act="delete-cat" data-id="${esc(c.id)}" title="Удалить">✕</button>
+              </div>
+            </li>`).join('')}
+        </ul>
+      </div>
+      <button class="gh-btn primary full" style="margin-top:8px" data-act="add-cat">+ Добавить категорию</button>
+
+      <hr class="gh-divider">
+
+      <h2 class="gh-section-title">Данные</h2>
+      <div class="gh-btn-row">
+        <button class="gh-btn" data-act="export">⬇ Экспорт</button>
+        <button class="gh-btn" data-act="import">⬆ Импорт</button>
+      </div>
+      <button class="gh-btn danger full" data-act="reset">Сбросить все данные</button>
+      <p class="gh-field-hint" style="margin-top:12px">Данные хранятся только на этом устройстве. Для переноса используйте экспорт/импорт.</p>
+    </main>`;
+}
+
+function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+function initTextareas() { document.querySelectorAll('.gh-textarea').forEach(autoResize); }
+
+function render() {
+  const app = document.getElementById('app');
+  if (state.screen === 'member') app.innerHTML = renderMember();
+  else if (state.screen === 'settings') app.innerHTML = renderSettings();
+  else app.innerHTML = renderHome();
+  if (state.screen === 'member') initTextareas();
+}
+
+function addMember() {
+  const name = prompt('Имя участника:', '');
+  if (!name || !name.trim()) return;
+  const role = prompt('Роль / должность (необязательно):', '');
+  state.data.members.push({ id: uid(), name: name.trim(), role: (role || '').trim() });
+  saveNow(); render(); toast('Участник добавлен');
+}
+function editMember(id) {
+  const m = state.data.members.find(x => x.id === id);
+  if (!m) return;
+  const name = prompt('Имя:', m.name);
+  if (name === null || !name.trim()) return;
+  m.name = name.trim();
+  const role = prompt(m.isTeam ? 'Подпись (необязательно):' : 'Роль (необязательно):', m.role || '');
+  if (role !== null) m.role = role.trim();
+  saveNow(); render();
+}
+function deleteMember(id) {
+  const m = state.data.members.find(x => x.id === id);
+  if (!m || m.isTeam) return;
+  if (!confirm(`Удалить участника «${m.name}»?`)) return;
+  state.data.members = state.data.members.filter(x => x.id !== id);
+  delete state.data.evals[id];
+  saveNow(); render(); toast('Участник удалён');
+}
+function addCategory() {
+  const name = prompt('Название категории / норматива:', '');
+  if (!name || !name.trim()) return;
+  state.data.categories.push({ id: uid(), name: name.trim() });
+  saveNow(); render(); toast('Категория добавлена');
+}
+function editCategory(id) {
+  const c = state.data.categories.find(x => x.id === id);
+  if (!c) return;
+  const name = prompt('Название категории:', c.name);
+  if (name === null || !name.trim()) return;
+  c.name = name.trim();
+  saveNow(); render();
+}
+function deleteCategory(id) {
+  const c = state.data.categories.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Удалить категорию «${c.name}»?`)) return;
+  state.data.categories = state.data.categories.filter(x => x.id !== id);
+  for (const mId in state.data.evals) if (state.data.evals[mId]) delete state.data.evals[mId][id];
+  saveNow(); render(); toast('Категория удалена');
+}
+function exportJson() {
+  const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  const safe = (state.data.teamName || 'zarnica').replace(/[^\wа-яА-Я\-\s]/g, '').replace(/\s+/g, '_') || 'zarnica';
+  a.href = url; a.download = `zarnica_${safe}_${date}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Файл экспортирован');
+}
+function resetAll() {
+  if (!confirm('Удалить ВСЕ данные?')) return;
+  if (!confirm('Точно удалить? Всё потеряется.')) return;
+  state.data = defaultData(); saveNow();
+  state.screen = 'home'; state.currentMemberId = null;
+  render(); toast('Данные сброшены');
+}
+let toastTimer;
+function toast(msg) {
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'gh-toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  switch (act) {
+    case 'open-settings': state.screen = 'settings'; render(); break;
+    case 'back': state.screen = 'home'; state.currentMemberId = null; render(); break;
+    case 'open-member': state.screen = 'member'; state.currentMemberId = id; render(); break;
+    case 'add-member': addMember(); break;
+    case 'edit-member': editMember(id); break;
+    case 'delete-member': deleteMember(id); break;
+    case 'add-cat': addCategory(); break;
+    case 'edit-cat': editCategory(id); break;
+    case 'delete-cat': deleteCategory(id); break;
+    case 'export': exportJson(); break;
+    case 'import': document.getElementById('importInput')?.click(); break;
+    case 'reset': resetAll(); break;
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const ta = e.target.closest('.gh-textarea');
+  if (ta) {
+    const mId = ta.dataset.member, cId = ta.dataset.cat, val = ta.value;
+    if (!state.data.evals[mId]) state.data.evals[mId] = {};
+    if (val.trim()) state.data.evals[mId][cId] = val;
+    else delete state.data.evals[mId][cId];
+    save(); autoResize(ta);
+    return;
+  }
+  if (e.target.id === 'teamNameInput') { state.data.teamName = e.target.value; save(); }
+  if (e.target.id === 'search') {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('#memberList .gh-list-item').forEach(card => {
+      card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target.id !== 'importInput') return;
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || !Array.isArray(data.members) || !Array.isArray(data.categories))
+        throw new Error('Неверный формат файла');
+      if (!confirm('Заменить текущие данные импортированными?')) return;
+      state.data = normalizeData(data);
+      saveNow(); render(); toast('Данные импортированы');
+    } catch (err) { alert('Ошибка импорта: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+render();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW:', err));
+  });
+}
+</script>
+</body>
+</html>
